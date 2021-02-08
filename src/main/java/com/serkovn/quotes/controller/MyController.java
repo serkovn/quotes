@@ -4,7 +4,7 @@ package com.serkovn.quotes.controller;
 import com.serkovn.quotes.entity.Quote;
 import com.serkovn.quotes.entity.User;
 import com.serkovn.quotes.entity.UserVoiceQuote;
-import com.serkovn.quotes.service.EmployeeService;
+import com.serkovn.quotes.service.QuoteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @Controller
 public class MyController {
     @Autowired
-    private EmployeeService employeeService;
+    private QuoteService quoteService;
 
     @GetMapping("/hello")
     public String helloWorld() {
@@ -40,7 +40,7 @@ public class MyController {
 
     @GetMapping("/newQuote")
     public String newQuote(@RequestParam("UserId") Long userId, Model model) {
-        User user = employeeService.getUser(userId);
+        User user = quoteService.getUser(userId);
         Quote quote = new Quote();
         model.addAttribute("quote",quote);
         model.addAttribute("user", user);
@@ -49,16 +49,16 @@ public class MyController {
 
     @GetMapping("/delete")
     public String delete(@RequestParam("QuoteId") Long quoteId, @RequestParam("UserId") Long userId, Model model) {
-        User user = employeeService.getUser(userId);
-        employeeService.deleteQuote(quoteId);
+        User user = quoteService.getUser(userId);
+        quoteService.deleteQuote(quoteId);
         quote(user, model);
         return "all-quotes";
     }
 
     @GetMapping("/update")
     public String update(@RequestParam("QuoteId") Long quoteId,@RequestParam("UserId") Long userId, Model model) {
-        Quote quote = employeeService.getQuote(quoteId);
-        User user = employeeService.getUser(userId);
+        Quote quote = quoteService.getQuote(quoteId);
+        User user = quoteService.getUser(userId);
         model.addAttribute("quote",quote);
         model.addAttribute("user", user);
         return "newQuotes";
@@ -66,20 +66,20 @@ public class MyController {
 
     @GetMapping("/saveNew")
     public String saveNew(@RequestParam("name") String string,@RequestParam("UserId") Long userId,@RequestParam("QuoteId") Long quoteId, Model model) {
-        User user = employeeService.getUser(userId);
+        User user = quoteService.getUser(userId);
         Quote quote = new Quote();
         quote.setId(quoteId);
         quote.setName(string);
         quote.setCount(1);
         quote.setAuthor(user.getName());
-        employeeService.saveQuote(quote);
+        quoteService.saveQuote(quote);
         quote(user, model);
         return "all-quotes";
     }
 
     @GetMapping("/increment")
     public String increment(@RequestParam("QuoteId") Long quoteId,@RequestParam("UserId") Long userId, Model model) {
-        User user = employeeService.getUser(userId);
+        User user = quoteService.getUser(userId);
 /*        List<Quote> quotes = employeeService.getAllQuotes();
         Collections.sort(quotes, new Comparator<Quote>() {
             public int compare(Quote o1, Quote o2) {
@@ -105,7 +105,7 @@ public class MyController {
         }
         quoteList = quoteList.stream().limit(5).collect(Collectors.toList());
         model.addAttribute("quotesLast", quoteList);*/
-        List<UserVoiceQuote> list = employeeService.getAllUserVoice();
+        List<UserVoiceQuote> list = quoteService.getAllUserVoice();
         Collections.sort(list, new Comparator<UserVoiceQuote>() {
             public int compare(UserVoiceQuote o1, UserVoiceQuote o2) {
                 return o1.getDate_time().compareTo(o2.getDate_time());
@@ -117,22 +117,22 @@ public class MyController {
                 return "all-quotes";
             }
         }
-        Quote quote = employeeService.getQuote(quoteId);
+        Quote quote = quoteService.getQuote(quoteId);
         quote.setCount(quote.getCount() + 1);
-        employeeService.saveQuote(quote);
+        quoteService.saveQuote(quote);
         UserVoiceQuote userVoiceQuote = new UserVoiceQuote();
         userVoiceQuote.setQuote_id(quoteId);
         userVoiceQuote.setUser_id(userId);
         userVoiceQuote.setDate_time(new Date());
-        employeeService.saveUserVoice(userVoiceQuote);
+        quoteService.saveUserVoice(userVoiceQuote);
         quote(user, model);
         return "all-quotes";
     }
 
     @GetMapping("/decrement")
     public String decrement(@RequestParam("QuoteId") Long quoteId,@RequestParam("UserId") Long userId, Model model) {
-        User user = employeeService.getUser(userId);
-        List<UserVoiceQuote> list = employeeService.getAllUserVoice();
+        User user = quoteService.getUser(userId);
+        List<UserVoiceQuote> list = quoteService.getAllUserVoice();
         Collections.sort(list, new Comparator<UserVoiceQuote>() {
             public int compare(UserVoiceQuote o1, UserVoiceQuote o2) {
                 return o1.getDate_time().compareTo(o2.getDate_time());
@@ -144,25 +144,25 @@ public class MyController {
                 return "all-quotes";
             }
         }
-        Quote quote = employeeService.getQuote(quoteId);
+        Quote quote = quoteService.getQuote(quoteId);
         if (quote.getCount()>0) {
             quote.setCount(quote.getCount() - 1);
         }else {
             quote.setCount(0);
         }
-        employeeService.saveQuote(quote);
+        quoteService.saveQuote(quote);
         UserVoiceQuote userVoiceQuote = new UserVoiceQuote();
         userVoiceQuote.setQuote_id(quoteId);
         userVoiceQuote.setUser_id(userId);
         userVoiceQuote.setDate_time(new Date());
-        employeeService.saveUserVoice(userVoiceQuote);
+        quoteService.saveUserVoice(userVoiceQuote);
         quote(user, model);
         return "all-quotes";
     }
 
     @GetMapping("/")
     public String showAllEmployees(Model model) {
-        List<Quote> quotes = employeeService.getAllQuotes();
+        List<Quote> quotes = quoteService.getAllQuotes();
         Collections.sort(quotes, new Comparator<Quote>() {
             public int compare(Quote o1, Quote o2) {
                 return o2.getCount() - o1.getCount();
@@ -179,7 +179,7 @@ public class MyController {
 
     @PostMapping("/userOpen")
     public String userOpen(@ModelAttribute("user") User user, Model model ) {
-        List<User> users = employeeService.getAllUser();
+        List<User> users = quoteService.getAllUser();
         for (User u : users) {
             if (u.getName().equals(user.getName())) {
                 if (!u.getPassword().equals(user.getPassword()))
@@ -189,11 +189,11 @@ public class MyController {
             }
         }
         if (user.getId() == null) {
-            employeeService.saveUser(user);
+            quoteService.saveUser(user);
         }
 
         // Сортировка топ 10 и отбор 10 штук
-        List<Quote> quotes = employeeService.getAllQuotes();
+        List<Quote> quotes = quoteService.getAllQuotes();
         Collections.sort(quotes, new Comparator<Quote>() {
             public int compare(Quote o1, Quote o2) {
                 return o2.getCount() - o1.getCount();
@@ -203,7 +203,7 @@ public class MyController {
 
 
         //Сортировка и отбор 5 последних голосов
-        List<UserVoiceQuote> list = employeeService.getAllUserVoice();
+        List<UserVoiceQuote> list = quoteService.getAllUserVoice();
         Collections.sort(list, new Comparator<UserVoiceQuote>() {
             public int compare(UserVoiceQuote o1, UserVoiceQuote o2) {
                 return o1.getDate_time().compareTo(o2.getDate_time());
@@ -212,7 +212,7 @@ public class MyController {
                List<Quote> quoteList = new ArrayList<>();
         for (UserVoiceQuote us: list) {
             if (us.getUser_id() == user.getId()) {
-                quoteList.add(employeeService.getQuote(us.getQuote_id()));
+                quoteList.add(quoteService.getQuote(us.getQuote_id()));
             }
         }
         quoteList = quoteList.stream().limit(5).collect(Collectors.toList());
@@ -229,7 +229,7 @@ public class MyController {
 
     public void quote(User user, Model model ) {
         // Сортировка топ 10 и отбор 10 штук
-        List<Quote> quotes = employeeService.getAllQuotes();
+        List<Quote> quotes = quoteService.getAllQuotes();
         Collections.sort(quotes, new Comparator<Quote>() {
             public int compare(Quote o1, Quote o2) {
                 return o2.getCount() - o1.getCount();
@@ -239,7 +239,7 @@ public class MyController {
 
 
         //Сортировка и отбор 5 последних голосов
-        List<UserVoiceQuote> list = employeeService.getAllUserVoice();
+        List<UserVoiceQuote> list = quoteService.getAllUserVoice();
         Collections.sort(list, new Comparator<UserVoiceQuote>() {
             public int compare(UserVoiceQuote o1, UserVoiceQuote o2) {
                 return o2.getDate_time().compareTo(o1.getDate_time());
@@ -248,7 +248,7 @@ public class MyController {
         List<Quote> quoteList = new ArrayList<>();
         for (UserVoiceQuote us: list) {
             if (us.getUser_id() == user.getId()) {
-                quoteList.add(employeeService.getQuote(us.getQuote_id()));
+                quoteList.add(quoteService.getQuote(us.getQuote_id()));
             }
         }
         quoteList = quoteList.stream().limit(5).collect(Collectors.toList());
